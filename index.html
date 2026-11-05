@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pastel Habit Tracker & Daily To-Do</title>
+  
+  <!-- Google Fonts: Playfair Display (Serif) & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Web App Manifest for Mobile PWA (Add to Home Screen) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FDFBF7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <span class="brand-title">Habit Tracker</span>
+        <span class="brand-subtitle">Pastel Aesthetic</span>
+      </div>
+
+      <div class="header-actions">
+        <!-- Live Sync Status Indicator -->
+        <div class="sync-status-badge" id="sync-status-indicator" title="Sync Status">
+          <span class="sync-dot online"></span>
+          <span>Connecting...</span>
+        </div>
+
+        <!-- Mobile & Laptop Sync Button -->
+        <button class="btn-header-action" id="btn-open-sync" title="Sync between mobile and laptop">
+          <span>📱 Mobile Sync</span>
+        </button>
+
+        <!-- Backup & Restore Actions -->
+        <button class="btn-header-action" id="btn-export-backup" title="Export Backup JSON">
+          <span>💾 Backup</span>
+        </button>
+        <button class="btn-header-action" id="btn-import-backup" title="Restore Data">
+          <span>📂 Restore</span>
+        </button>
+        <input type="file" id="file-import-input" accept=".json" style="display: none;">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="main-wrapper">
+
+    <!-- Top Dashboard: 2-Column Grid -->
+    <section class="dashboard-top-grid">
+
+      <!-- Left Column: Month Picker, Affirmation, Today's To-Do -->
+      <div class="left-dashboard-col">
+
+        <!-- Month & Year Selector Card -->
+        <div class="month-picker-card">
+          <div class="month-display-row">
+            <h1 id="header-month-title">September</h1>
+            <span class="habit-tracker-tag">Habit Tracker</span>
+          </div>
+          <div class="date-pickers-row">
+            <div class="picker-group">
+              <label for="month-select">Month</label>
+              <select id="month-select"></select>
+            </div>
+            <div class="picker-group">
+              <label for="year-select">Year</label>
+              <select id="year-select"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Affirmation Card (Changes dynamically on every refresh!) -->
+        <div class="affirmation-card">
+          <div class="affirmation-header">
+            <span class="affirmation-title">Visual Affirmation</span>
+            <button class="btn-shuffle" id="btn-shuffle-quote" title="Click for a new inspiring thought">
+              <span>✨ New Quote</span>
+            </button>
+          </div>
+          <div class="affirmation-lead">I am ...</div>
+          <div class="affirmation-body" id="affirmation-text">"Focused, intentional, and ready for whatever comes ahead."</div>
+          <div class="affirmation-author" id="affirmation-author">— Daily Affirmation</div>
+        </div>
+
+        <!-- Today's Action Dashboard & To-Do List -->
+        <div class="today-todo-card">
+          <div class="todo-header">
+            <h2>Today's Focus</h2>
+            <div id="today-todo-stats">
+              <span class="badge-pill">0 tasks</span>
+            </div>
+          </div>
+          <p class="today-subtext" id="today-date-display">Today</p>
+
+          <!-- Add To-Do Form -->
+          <form class="add-todo-form" id="add-todo-form">
+            <div class="todo-input-row">
+              <input type="text" id="new-todo-input" placeholder="What do you want to achieve today?..." autocomplete="off" />
+              <button type="submit" class="btn-add-todo">+ Add</button>
+            </div>
+            <label class="habit-toggle-option">
+              <input type="checkbox" id="is-habit-toggle" />
+              <span>Track as a Daily Habit 🌸</span>
+            </label>
+          </form>
+
+          <!-- Quick Habit Pills -->
+          <div class="quick-habits-wrapper" id="quick-add-habits-pills"></div>
+
+          <!-- To-Do Items Checklist -->
+          <div class="todo-items-list" id="today-todo-list"></div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Mountain Wave Chart & 5 Donut Rings -->
+      <div class="right-dashboard-col">
+
+        <!-- Wave / Mountain Progress Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title-group">
+              <h2>Monthly Progress Wave</h2>
+              <span class="chart-subtitle">Daily completion trend across all weeks</span>
+            </div>
+            <!-- Daily Progress Percentage Badge -->
+            <div class="daily-progress-box">
+              <span class="progress-label">Daily Progress</span>
+              <span class="progress-value" id="daily-progress-badge">0%</span>
+            </div>
+          </div>
+
+          <div class="canvas-wrapper">
+            <canvas id="waveChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 5 Weekly Donut Progress Rings -->
+        <div class="donut-rings-card">
+          <div class="donut-rings-grid" id="donut-rings-container">
+            <!-- Rendered dynamically by charts.js -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Daily Habits Matrix Section -->
+    <section class="habits-section">
+      <div class="section-action-header">
+        <h2>Daily Habits Tracker</h2>
+        <button class="btn-primary" id="btn-add-habit">
+          <span>+ Add Daily Habit</span>
+        </button>
+      </div>
+
+      <!-- Table Container -->
+      <div id="daily-habits-table-container"></div>
+    </section>
+
+    <!-- Bottom Section: Weekly Habits & Monthly Reflection (2-Column) -->
+    <section class="bottom-sections-grid">
+
+      <!-- Weekly Habits -->
+      <div class="bottom-card">
+        <div class="bottom-card-header">
+          <h3>Weekly Habits</h3>
+          <button class="btn-subtle" id="btn-add-weekly">+ Add</button>
+        </div>
+        <div class="weekly-habits-layout">
+          <div class="weekly-stats-side" id="weekly-habits-stats"></div>
+          <div class="weekly-list-side" id="weekly-habits-list"></div>
+        </div>
+      </div>
+
+      <!-- Monthly Habits & Reflection -->
+      <div class="bottom-card">
+        <div class="bottom-card-header">
+          <h3>Monthly Habits & Reflection</h3>
+          <button class="btn-subtle" id="btn-add-monthly">+ Add Habit</button>
+        </div>
+        <div class="monthly-reflection-layout">
+          <!-- Monthly Habits Box -->
+          <div class="monthly-habits-box">
+            <div id="monthly-habits-stats" style="margin-bottom: 8px;"></div>
+            <div id="monthly-habits-list"></div>
+          </div>
+          <!-- Digital Lined Paper Notepad -->
+          <div class="reflection-lined-paper">
+            <label for="monthly-reflection-text">Monthly Reflection</label>
+            <textarea id="monthly-reflection-text" class="lined-textarea" placeholder="Reflect on your achievements, mindful moments, and lessons this month..."></textarea>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal: Add New Daily Habit -->
+  <div class="modal-overlay" id="modal-add-habit">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Add New Daily Habit</h3>
+        <button class="btn-close-modal" id="btn-close-modal-habit">&times;</button>
+      </div>
+      <form id="form-add-habit">
+        <div class="form-group">
+          <label for="habit-name-input">Habit Name</label>
+          <input type="text" id="habit-name-input" placeholder="e.g., Morning Meditation, 30 Min Reading, Workout..." required autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="habit-goal-input">Monthly Goal % (Optional)</label>
+          <input type="number" id="habit-goal-input" min="10" max="100" value="100" />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Create Habit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Mobile & Laptop Sync with QR Code -->
+  <div class="modal-overlay" id="modal-sync">
+    <div class="modal-window qr-modal-content">
+      <div class="modal-header">
+        <h3>📱 Connect Mobile & Laptop</h3>
+        <button class="btn-close-modal" id="btn-close-sync">&times;</button>
+      </div>
+      <p style="font-size: 0.9rem; color: #64748B;">
+        Use your mobile phone camera to scan the QR code below. Your phone and laptop will sync live in real-time with zero data loss!
+      </p>
+
+      <!-- QR Code Display -->
+      <div class="qr-code-box" id="qr-code-container"></div>
+
+      <!-- Sync Key Configuration -->
+      <div style="margin-top: 16px; text-align: left;">
+        <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94A3B8;">Your Personal Sync Key</label>
+        <div class="sync-key-row">
+          <input type="text" id="custom-sync-key-input" style="flex: 1; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-weight: 600;" />
+          <button class="btn-primary" id="btn-save-sync-key">Save Key</button>
+        </div>
+        <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 6px;">
+          Any device entering this key will automatically share and sync your habit data.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/quotes.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/todo.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
